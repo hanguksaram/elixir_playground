@@ -4,4 +4,4 @@ defmodule Test do
   end
 end
 
-IO.puts Test.hello("Elixir")
+# IO.puts Test.hello("Elixir")

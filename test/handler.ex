@@ -1,7 +1,7 @@
 defmodule Test.Handler do
 
   alias Test.Conv
-
+  alias Test.BearController
   @pages_path Path.expand("../../pages", __DIR__)
 
   import Test.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
@@ -23,7 +23,7 @@ defmodule Test.Handler do
   end
 
   def route(%Conv{ method: "GET", path: "/bears" } = conv) do
-    %{ conv | status: 200, resp_body: "Teddy, Smokey, Paddington" }
+    BearController.index(conv)
   end
 
   def route(%Conv{ method: "GET", path: "/about" } = conv) do
@@ -33,12 +33,12 @@ defmodule Test.Handler do
       |> handle_file(conv)
   end
   def route(%Conv{ method: "GET", path: "/bears/" <> id } = conv) do
-    %{ conv | status: 200, resp_body: "Bear #{id}" }
+    params = Map.put(conv.params, "id", id )
+    BearController.show(conv, params)
   end
 
   def route(%Conv{method: "POST", path: "/bears"} = conv) do
-    %{ conv | status: 201,
-  resp_body: "Created a #{conv.params["type"]} kek"}
+    BearController.create(conv, conv.params)
   end
   def route(%Conv{ path: path } = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here!"}
@@ -68,6 +68,32 @@ defmodule Test.Handler do
 
 end
 
+
+request = """
+GET /bears/1 HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Test.Handler.handle(request)
+
+IO.puts response
+
+
+
+request = """
+GET /bears HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Test.Handler.handle(request)
+
+IO.puts response
 
 request = """
 POST /bears HTTP/1.1

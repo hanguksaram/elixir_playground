@@ -2,6 +2,7 @@ defmodule Test.Handler do
 
   alias Test.Conv
   alias Test.BearController
+
   @pages_path Path.expand("../../pages", __DIR__)
 
   import Test.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
@@ -20,6 +21,10 @@ defmodule Test.Handler do
 
   def route(%Conv{ method: "GET", path: "/wildthings" } = conv) do
     %{ conv | status: 200, resp_body: "Bears, Lions, Tigers" }
+  end
+
+  def route(%Conv{ method: "GET", path: "/api/bears" } = conv) do
+    Test.Api.BearController.index(conv)
   end
 
   def route(%Conv{ method: "GET", path: "/bears" } = conv) do
@@ -59,7 +64,7 @@ defmodule Test.Handler do
   def format_response(%Conv{} = conv) do
     """
     HTTP/1.1 #{Conv.full_status(conv)}
-    Content-Type: text/html
+    Content-Type: #{conv.cont_type}
     Content-Length: #{String.length(conv.resp_body)}
 
     #{conv.resp_body}
@@ -67,47 +72,5 @@ defmodule Test.Handler do
   end
 
 end
-
-
-request = """
-GET /bears/1 HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Test.Handler.handle(request)
-
-IO.puts response
-
-
-
-request = """
-GET /bears HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Test.Handler.handle(request)
-
-IO.puts response
-
-request = """
-POST /bears HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 21
-
-name=Ballo&type=Brown
-"""
-
-response = Test.Handler.handle(request)
-
-IO.puts response
 
 

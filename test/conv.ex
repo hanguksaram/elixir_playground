@@ -4,6 +4,7 @@ defmodule Test.Conv do
             headers: %{},
             params: %{},
             resp_body: "",
+            cont_type: "text/html",
             status: nil
 
   def full_status(conv) do

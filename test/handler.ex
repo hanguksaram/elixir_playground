@@ -3,7 +3,7 @@ defmodule Test.Handler do
   alias Test.Conv
   alias Test.BearController
   alias Test.VideoCam
-  alias Test.Fetcher
+
 
   @pages_path Path.expand("../../pages", __DIR__)
 
@@ -40,14 +40,15 @@ defmodule Test.Handler do
     BearController.index(conv)
   end
   def route(%Conv{ method: "GET", path: "/sensors"} = conv) do
+    task = Task.async(fn -> Test.Tracker.get_location("bigfoot") end)
     snapshots =
       ["cam-1", "cam-2", "cam-3"]
-      |> Enum.map(&Fetcher.async(fn -> VideoCam.get_snapshot(&1) end))
-      |> Enum.map(&Fetcher.get_result/1)
+      |> Enum.map(&Task.async(fn -> VideoCam.get_snapshot(&1) end))
+      |> Enum.map(&Task.await/1)
 
-    pid4 = Fetcher.async(fn -> Test.Tracker.get_location("bigfoot") end)
 
-    where_is_bigfoot = Fetcher.get_result(pid4)
+
+    where_is_bigfoot = Task.await(task)
     %{ conv | status: 200, resp_body: inspect {snapshots, where_is_bigfoot} }
 
   end

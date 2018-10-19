@@ -40,17 +40,14 @@ defmodule Test.Handler do
     BearController.index(conv)
   end
   def route(%Conv{ method: "GET", path: "/sensors"} = conv) do
-    pid1 = Fetcher.async(fn -> VideoCam.get_snapshot("cam-1") end)
-    pid2 = Fetcher.async(fn -> VideoCam.get_snapshot("cam-2") end)
-    pid3 = Fetcher.async(fn -> VideoCam.get_snapshot("cam-3") end)
+    snapshots =
+      ["cam-1", "cam-2", "cam-3"]
+      |> Enum.map(&Fetcher.async(fn -> VideoCam.get_snapshot(&1) end))
+      |> Enum.map(&Fetcher.get_result/1)
+
     pid4 = Fetcher.async(fn -> Test.Tracker.get_location("bigfoot") end)
 
-    snapshot1 = Fetcher.get_result(pid1)
-    snapshot2 = Fetcher.get_result(pid2)
-    snapshot3 = Fetcher.get_result(pid3)
     where_is_bigfoot = Fetcher.get_result(pid4)
-
-    snapshots = [snapshot1, snapshot2, snapshot3]
     %{ conv | status: 200, resp_body: inspect {snapshots, where_is_bigfoot} }
 
   end
